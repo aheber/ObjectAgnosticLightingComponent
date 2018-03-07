@@ -1,40 +1,42 @@
 
 # Building Object Agnostic Lightning Components
+This tutorial is designed to help you build a Lighting Component that has the ability to adapt to the object it is displayed on as well as instructions from the user that can come from a few different directions. The goals are to showcase a few methods for adding flexibility to your components and some techniques for preventing your component from only working on one or two distinct objects.
+
 Instructions will assume you're using the Developer Console, feel free to translate to your favorite editor.
 
-The structure of this doc adds code incrementally to your project. This doesn't work for everyone because sometimes you have a hard time with spacial awareness in code, I know that I do. Along the way I've added lots of collapsed sections which include the full component code to that point. If you get lost or something doesn't work just grab the nearest "Full Component" and paste it in.
+The structure of this doc adds code incrementally to your project. This doesn't work for everyone because sometimes spacial awareness in code is difficult or the instructions for placement aren't very good. Along the way I've added lots of collapsed sections which include the full component code to that point, one for each file we've recently worked with. If you get lost or something doesn't work just grab the nearest "Full Component" section and paste it in.
 
 
 ## Setup
 This is all done using Lightning Experience.
 
-Make sure you have a developer edition available to you. Your org will need to have My Domain enabled, this is required to develop custom Lightning Components. Trailhead orgs are often ready to go for this.
+Make sure you have a developer edition available to you. The org you're working in will need to have My Domain enabled, this is required to develop custom Lightning Components. Trailhead orgs are often ready to go for this. If you need to set it up for your org use this trailhead: 
 [Setup My Domain](https://trailhead.salesforce.com/en/projects/slds-lightning-components-workshop/steps/slds-lc-1)
 
 ONLY IN A DEVELOPMENT ENVIRONMENT Disable caching of components.
 
 Setup -> Session Settings --> Caching --> uncheck _Enable secure and persistent browser caching to improve performance_
 
-This will make sure when you display the page you get the most recent version of your component as you're building it.
+This will make sure when you display the page you get the most recent version of your component as you're building it, otherwise Salesforce will hold onto old versions and you won't see updates without several refreshes.
 
 ## Phase 1
 
 ### Create a new Lighting Component that can be placed on a record
 Using Dev Console select New -> Lightning Component.
 Give it a name of RecordInfo, select the Lightning Record Page configuration.
-It should look something like this
+It should look something like this, I've also added the text `This is the Record Info component`
 ```html
 <aura:component implements="flexipage:availableForRecordHome,force:hasRecordId" access="global" >
-	This is the Record Info component
+  This is the Record Info component
 </aura:component>
 ```
  You can see that by selecting Lighting Record Page it has added some _implements_ attributes, we call these interfaces, this is the first way we're letting this component know about its surroundings.
- * flexipage:availableForRecordHome - tells the system that this component can be placed on a record page rather than a home page, mobile page, etc...
- * force:hasRecordId - tells the system that this component is ready to receive the Id value of the record it is placed on, we'll use this to get information from this record for display
+ * flexipage:availableForRecordHome - tells the system that this component is compatible with a record page, compared to other implements values that could make it compatible with a Home, Mobile, or other page types
+ * force:hasRecordId - tells the system that this component is ready to receive the Id value of the record it is placed on, we'll use this to get information from this record and give context to your component
 
-You can think of an interface by thinking of an international plug adapter, your component is the adapter and the various plug types are the interfaces that you implement. You're describing ways that the Lighting framework can plug into your component.
+You can think of an interface by thinking of an international plug adapter, your component is the adapter and the various plug types are the interfaces that you implement. You're describing ways that the Lighting framework can plug into your component or what areas of the application you are compatible with.
 
-For the sake of future display improvements, lets add a Style file. With the component open in Developer Console click on STYLE in the right column. Add the following.
+To help our component look better as we build it lets add a Style file. With the component open in Developer Console click on STYLE in the right column. Add the following CSS information to the file
 ```css
 .THIS label {
     font-weight: bold;
@@ -42,16 +44,15 @@ For the sake of future display improvements, lets add a Style file. With the com
 ```
 
 ### Add it to the Account record page
-Navigate to an Account, using the gear at the top of the page select Edit Page.
-Once in the Page Builder scroll down the component list to the Custom section, grab the RecordInfo component and place it on the top-right of the Account Page you're building. Save and, if necessary, activate as the Org Default.
+Navigate to an Account, using the gear at the top of the page select Edit Page. Once in the Page Builder scroll down the component list to the Custom section, grab the RecordInfo component and place it on the top-right of the Account Page you're building. Save and, if necessary, activate as the Org Default.
 
 
 ### Teach the Lighting Component about the record it is displayed on
-Let start by displaying what data we have available now.
-Lets add the record id to the component output so we can make sure we can see it
+Let start by displaying what data we have available now. Lets add the record id to the component output so we can make sure we can see it
 
+In the component file, replace the text `This is the Record Info component` with
 ```html
-Record Id: {!v.recordId}
+Record Id: {!v.recordId}<br />
 ```
 
 <details><summary>Full Component</summary>
@@ -59,7 +60,7 @@ Record Id: {!v.recordId}
 
 ```html
 <aura:component implements="flexipage:availableForRecordHome,force:hasRecordId" access="global" >
-	Record Id: {!v.recordId}
+  Record Id: {!v.recordId}<br />
 </aura:component>
 ```
 
@@ -68,7 +69,7 @@ Record Id: {!v.recordId}
   
 Go ahead and refresh the account page, you should see the record id floating on the background.
 
-So far our component implements gathering the record id but there is one piece we want to add that will help us get some additional information about our record. Lets add the _force:hasSObjectName_ inteface to the list of interfaces that we implement.
+So far our component implements gathering the record id but there is one piece we want to add that will help us get some additional information about our record. Lets add the _force:hasSObjectName_ interface to the list of interfaces that we implement.
 
 Your component line should look like this now
 
@@ -87,7 +88,7 @@ SObject Name: {!v.sObjectName}<br />
 
 ```html
 <aura:component implements="flexipage:availableForRecordHome,force:hasRecordId,force:hasSObjectName" access="global">
-	Record Id: {!v.recordId}<br />
+    Record Id: {!v.recordId}<br />
     SObject Name: {!v.sObjectName}<br />
 </aura:component>
 ```
@@ -95,27 +96,25 @@ SObject Name: {!v.sObjectName}<br />
 </p>
 </details>
   
-At this point we're doing very little. If you wanted the record id you'd pull it from the address bar and if you're looking at an account record and don't know it is an account record, you might be beyond help.
+At this point we're doing very little. There are lots of ways to get the record id without a custom component but I do find it helpful to have the objects API name readily available.
 
-That said, we are on track. You can take this component and place it on any record in your whole system and it would work, as nearly worthless as that is... but we're getting there.
+That said, we are on track. You can take this component and place it on any record in your whole system and it would work, the value of this is questionable but we're getting there.
 
 ### Add Lighting Data Service to the component
 
-The first piece of value we're going to add will be Lightning Data Service. Lightning Data Service is designed to allow a component easy access to record data. Finally we can get some real work done without Apex! Lightning Data Service implements a cache strategy to help reduce trips to the server, if we ask it for data it will get it for us, either from the cache held on the client, or by going to the server for the data. Luckily we don't have to worry about how it does it, we just ask for the data and the data magically appears. Lightning Data Service also handles security, if your user shouldn't see the field data they won't see the data.
+The first piece of value we're going to add will be Lightning Data Service. Lightning Data Service is designed to allow a component easy access to record data. Finally we can get some real work done without Apex! Lightning Data Service implements a cache strategy to help reduce trips to the server, if we ask it for data it will get it for us, either from the cache held on the client or by going to the server for the data. Luckily we don't have to worry about how it does it, we just ask for the data and the data magically appears. Lightning Data Service also handles security, if your user shouldn't see the field data they won't see the data.
 
-OK, that was a lot of talking, more code please!
+To add Lighting Data Service we just need a few more lines in our component. We'll add attributes to hold the record itself, the field values, and if needed any errors.
+To make the future easier we're also going to add an array of values for the specific fields we want to get from the database rather than defining the list of fields directly in the component's fields value.
 
-To add Lighting Data Service we just need a few more lines in our component.
-We'll add attributes to hold the record itself, the field values, and if needed any errors.
-To make the future easier we're also going to add an array of values for the specific fields we want to get from the database.
+We'll add the force:recordData component to our system, this is the connection to Lighting Data Service. We link all the attributes we've added to the component so we can use them later.
 
-We'll add the force:recordData component to our system, this is the connection to Lighting Data Service. We link all the attributes we've added to the component so we can use it later.
+You can add these in the component file right underneath the opening _aura:component_ tag.
 
 ```html
     <aura:attribute name="record" type="Object"/>
     <aura:attribute name="simpleRecord" type="Object"/>
     <aura:attribute name="recordError" type="String"/>
-
 
     <!-- record that we're sitting on -->
     <aura:attribute name="recordfields" type="String[]" default="Name,CreatedBy.Name,CreatedDate,OwnerId"/>
@@ -128,29 +127,28 @@ We'll add the force:recordData component to our system, this is the connection t
                       />
 ```
 
-Below the record id and sobject name we'll output some data from Lighting Data Service. We'll start using a little more HTML for styling and structure.
+Below the record id and sobject name we'll output some data from Lighting Data Service. We'll also start using a little bit richer HTML tags for styling and structure.
 
 ```html
-	<!-- Record Name -->
+    <!-- Record Name -->
     <label>Name:</label>&nbsp;<ui:outputText value="{!v.simpleRecord.Name}"/><br />
     <!-- CreatedDate, CreatedBy -->
     <label>Created By:</label>&nbsp;<ui:outputText value="{!v.simpleRecord.CreatedBy.Name}"/>&nbsp;on
     <lightning:formattedDateTime value="{!v.simpleRecord.CreatedDate}" year="2-digit" month="short" day="2-digit" weekday="long"/>
     <br />
-
 ```
 
 Below that, at the bottom of the component, output the errors if needed.
 
 ```html
-	<!-- Display Lightning Data Service errors, if any -->
+    <!-- Display Lightning Data Service errors, if any -->
     <aura:if isTrue="{!not(empty(v.recordError))}">
-    	<div class="recordError">
-        	<ui:message title="Error" severity="error" closable="true">
-				{!v.recordError}
-			</ui:message>
-		</div>
-	</aura:if>
+      <div class="recordError">
+          <ui:message title="Error" severity="error" closable="true">
+        {!v.recordError}
+      </ui:message>
+    </div>
+  </aura:if>
 ```
 
 <details><summary>Full Component</summary>
@@ -162,7 +160,6 @@ Below that, at the bottom of the component, output the errors if needed.
     <aura:attribute name="record" type="Object"/>
     <aura:attribute name="simpleRecord" type="Object"/>
     <aura:attribute name="recordError" type="String"/>
-    
     
     <!-- record that we're sitting on -->
     <aura:attribute name="recordfields" type="String[]" default="Name,CreatedBy.Name,CreatedDate,OwnerId"/>
@@ -207,26 +204,26 @@ Lighting is an event driven system. Lots of components on the page and they comm
 
 To see messages in action, change the name of the account record. When you change the name on the detail section of the page it will send a message for the world to hear, the force:recordData component will grab that message and it will reload the force:recordData values which in turn sends another message that the attributes linked to it have changed and whereever you've output that data in your component will be updated because it is listening for just that sort of event.
 
-For the purposes of this tutorial we're mostly going to consume messages sent to us from the framework. The first one we'll want to capture is knowing when Lighting Data Service has our data ready.  
+For the purposes of this tutorial we're mostly going to consume messages sent to us from the framework. The first one we'll want to capture is knowing when Lighting Data Service has our data ready.
 
 
 ### Use Events to respond to changes
 
-To get this working we will finally need to use our controller, in the Developer Console on the right side, click Controller in the bundle to create one. It will start with a basic method already defined named _myAction_. We're going to kill that and replace the name _myAction_ with _handleRecordUpdated_.
+To get this working we will need to start using our controller file, in the Developer Console on the right side, click CONTROLLER in the bundle to create one. It will start with a basic method already defined named _myAction_. We're going to kill that and replace the name _myAction_ with _handleRecordUpdated_.
 
 We'll make the controller throw up a message whenever the record is loaded. Here is the full controller we're starting with.
 
 ```javascript
 ({
-	handleRecordUpdated : function(component, event, helper) {
-		alert('Record Loaded');
-	}
+  handleRecordUpdated : function(component, event, helper) {
+    alert('Record Loaded');
+  }
 })
 ```
 
 Lets add an attribute to force:recordData to define a controller method to be called when the record is updated.
 
-The force:recordData should now look like this
+The force:recordData should now look like this, noting the recordUpdated value that has been added
 
 ```html
     <force:recordData aura:id="recordLoader"
@@ -249,7 +246,6 @@ The force:recordData should now look like this
     <aura:attribute name="record" type="Object"/>
     <aura:attribute name="simpleRecord" type="Object"/>
     <aura:attribute name="recordError" type="String"/>
-    
     
     <!-- record that we're sitting on -->
     <aura:attribute name="recordfields" type="String[]" default="Name,CreatedBy.Name,CreatedDate,OwnerId"/>
@@ -292,9 +288,9 @@ The force:recordData should now look like this
 
 We're going to start making things more dynamic. For fun we're going to add another force:recordData component. This will start with a blank record id so it won't actually load yet, it is going to sit around and wait for someone to tell it what to do.
 
-Using our handleRecordUpdated controller method, when the first record is loaded we'll assign the OwnerId from our base record on to the second so we can display some additional data. To make this work we'll have to get the OwnerId data from the first and set it onto the second's id value. We'll then fire an event on the component to tell it to go get its data from Lighting Data Service.
+Using our handleRecordUpdated controller method, when the first record is loaded we'll assign the OwnerId from our base record on to the new Lightning Data Service instance so we can display some additional data. To make this work we'll have to get the OwnerId data from the first and set it onto the second's id value. We'll then fire an event on the component to tell it to go get its data from Lighting Data Service.
 
-Change the Controller to match this
+Change the entire Controller to match this
 ```javascript
 ({
     handleRecordUpdated: function(component, event, helper) {
@@ -302,8 +298,8 @@ Change the Controller to match this
         if(eventParams.changeType === "LOADED" || eventParams.changeType === "CHANGED") {
             // base record is loaded from Lighting Data Service
 
-			// get the simpleRecord attribute from the component
-			var simpleRecord = component.get('v.simpleRecord');
+      // get the simpleRecord attribute from the component
+      var simpleRecord = component.get('v.simpleRecord');
             
             var ownerId = component.get('v.recordOwnerId');
             // if this is the first time we're loading the record then 
@@ -328,7 +324,7 @@ Change the Controller to match this
 })
 ```
 
-Add the second force:recordData along with some attributes to hold the data
+Back in the component file add the second force:recordData along with some attributes to hold the data under the first force:recordData tag.
 
 ```html
     <aura:attribute name="recordOwnerId" type="Id"/> <!-- assigned in Javascript after record load -->
@@ -336,7 +332,7 @@ Add the second force:recordData along with some attributes to hold the data
     <aura:attribute name="simpleRecordOwner" type="Object"/>
     <aura:attribute name="recordErrorOwner" type="String"/>
     
-	<!-- second instance of recordData component to get related record information -->
+    <!-- second instance of recordData component to get related record information -->
     <!-- owner of the record -->
     <force:recordData aura:id="recordOwner"
                       recordId="{!v.recordOwnerId}"
@@ -348,7 +344,7 @@ Add the second force:recordData along with some attributes to hold the data
     />
 ```
 
-Add some output for the Owner information, including name and picture.
+Underneath that add some output for the Owner information, including name and picture.
 
 ```html
     <!-- Owner Picture -->
@@ -360,7 +356,7 @@ Add some output for the Owner information, including name and picture.
 
 Now if you reload the page you'll see the record information along with the owner information. 
 
-I know I'm making it complicated, really we could have just used relationship fields on the first componenet to display owner information, you would be more likely to use this if you wanted to be able to edit multiple records. Sometimes we take the long road just to showcase functionality and boggle your mind with possibilities.
+I know I'm making it complicated, really we could have just used relationship fields on the first componenet to display owner information, similar to how we do it for Created By information, you would be more likely to use this if you wanted to be able to edit multiple records. Sometimes we take the long road just to showcase functionality and seed your mind with possibilities.
 
 ## TAKE A BREAK
 We're going to update the styling on our component real quick. It looks terrible! No background so you can't read the text, it doesn't look like it belongs in lightning at all.
@@ -456,8 +452,8 @@ Quickly copy the component from here to get the Lightning Design System injected
         if(eventParams.changeType === "LOADED" || eventParams.changeType === "CHANGED") {
             // base record is loaded from Lighting Data Service
 
-			// get the simpleRecord attribute from the component
-			var simpleRecord = component.get('v.simpleRecord');
+      // get the simpleRecord attribute from the component
+      var simpleRecord = component.get('v.simpleRecord');
 
             var ownerId = component.get('v.recordOwnerId');
             // if this is the first time we're loading the record then 
@@ -487,13 +483,13 @@ Quickly copy the component from here to get the Lightning Design System injected
 
 Our component is really starting to come together. We're using our interfaces to get the record id and SObject Name, then using that record id to get data from Lighting Data Service, then using that data to get more data about the owner. All of this is turning into a great way to... see what we already see on every record. The Name and the Owner. We'll start adding more to this very soon.
 
-Our primary objective is to have a component that we can put on any object and it will work without error. We're already going to run into one problem with this. We've selected a few specific fields, these fields exist on most records but not all. Go ahead and add your component to the Case page.
+Our primary objective is to have a component that we can put on any object and it will work without error. We're already going to run into one problem with this. We've selected a few specific fields from our base record, these fields exist on most records but not all. Go ahead and add your component to the Case page.
 
 See that error? `No such column 'Name' exists on entity 'Case'.`
 
 This is a bit of a problem, doesn't everything have a Name field?! I guess not. So how do we get this component working on stuff that doesn't have a proper name?
 
-For the Case record it has a name a just calls it something else. Case calls its name field CaseNumber. There are a few of the standard objects in Salesforce that use a different field name but serve the same purpose.
+For the Case record it has a name but it calls it something else. Case calls its name field CaseNumber. There are a few of the standard objects in Salesforce that use a different field instead of name but serve the same purpose.
 
 We're going to add the ability to tell our component the specific API name of the field that this object uses for its name value. That makes this component more flexible and will help it to function on the Case object.
 
@@ -501,7 +497,7 @@ We're going to add the ability to tell our component the specific API name of th
 
 If you've ever added a componenet to the page and it gave you the ability to provide specific parameters you've used Configuration Attributes. We're going to add a couple of these to our component so users can configure it the way they need.
 
-Go ahead and add these attributes to your componenet file, these will act as variables to hold the configuration parameters that the user provides us.
+Go ahead and add these attributes to your componenet file, these will act as variables to hold the configuration parameters that the user provides us. 
 
 ```html
     <!-- config attributes -->
@@ -523,7 +519,7 @@ Lets add another file to our Lighting Component Bundle, in Developer Console on 
 It should look like this when it opens up
 ```html
 <design:component >
-	
+  
 </design:component>
 ```
 
@@ -547,7 +543,7 @@ This is where things like having our list of retrieved fields as a String array 
 
 The first thing is to attach to a new event, we want to know as soon as our component is ready for business. The framework throws us an _init_ event as soon as it has us ready to go and we can use this to do some of our setup work like adding to the list of fields to get from the record.
 
-Inside our componenet we're going to add an aura:handler for the init event and point it at a controller methat that we'll also add.
+Inside our componenet we're going to add an aura:handler for the init event and point it at a new method in the controller file.
 
 Component
 ```html
@@ -577,7 +573,7 @@ Controller
             // smash two lists into each other
             recordFields = recordFields.concat(splitAdditionalFields);
         }
-        // put he updated list of fields back onto the componenet
+        // put the updated list of fields back onto the componenet
         component.set('v.recordfields',recordFields);
     },
 ```
@@ -598,28 +594,29 @@ A Lighting Component markup doesn't have the ability to dynamically grab a field
 
 We need a new aura:attribute to hold the string from whatever we called the name field, we'll also need an aura:attribute to hold the list of additional fields we want to display
 
-In your componenet add the following
+In your componenet add these just inside the component tags, so they should be above your other attributes
+
 ```html
-	<!-- config attribute output helpers -->
-	<aura:attribute name="namevalue" type="String"/>
-	<aura:attribute name="additionalfielddata" type="Object[]"/>
+  <!-- config attribute output helpers -->
+  <aura:attribute name="namevalue" type="String"/>
+  <aura:attribute name="additionalfielddata" type="Object[]"/>
 ```
 
 Now change out this line
 
 ```html
-	<label>Name:</label>&nbsp;<ui:outputText value="{!v.simpleRecord.Name}"/><br />
+  <label>Name:</label>&nbsp;<ui:outputText value="{!v.simpleRecord.Name}"/><br />
 ```
 with
 ```html
     <label>Name:</label>&nbsp;<ui:outputText value="{!v.namevalue}"/><br />
 ```
 
-You can see that we don't pull the name value from the simpleRecord anymore, we pull it from our own attribute which unfortunately is still blank. We'll assign a value to in our controller. So onto the controller.
+You can see that we don't pull the name value from the simpleRecord anymore, we pull it from our own attribute which unfortunately is still blank. We'll assign a value to in our controller so onto the controller.
 
 Back in the controller file find the _handleRecordUpdated_ method, we want to add some logic that once the Lighting Data Service fires the event to let us know that the record has data we can go and pilfer the value that we are assigning to the name and add it to our variable.
 
-Add right under the `var simpleRecord = component.get('v.simpleRecord');`
+Right under the `var simpleRecord = component.get('v.simpleRecord');` add
 
 ```javascript
   // capture name value
@@ -633,18 +630,19 @@ We've forgotten about something though, remember the other configuration attribu
 
 Lets add the aura:attribute to the component to hold the field data and use aura:iteration to loop through the fields and output the field name and value.
 
-Add the aura:attribute
+Add the aura:attribute to the component file
 ```html
     <aura:attribute name="additionalfielddata" type="Object[]"/>
 ```
 
 Add the aura:iteration for output below the created by information
+
 ```html
   <aura:if isTrue="{!v.additionalfielddata.length > 0}">
-  	<br /><span class="slds-text-title_caps">Additional Fields</span><br />
-  	<aura:iteration items="{!v.additionalfielddata}" var="field">
-  		<label>{!field.name}:</label>&nbsp;{!field.value}<br />
-  	</aura:iteration>
+    <br /><span class="slds-text-title_caps">Additional Fields</span><br />
+    <aura:iteration items="{!v.additionalfielddata}" var="field">
+      <label>{!field.name}:</label>&nbsp;{!field.value}<br />
+    </aura:iteration>
   </aura:if>
 ```
 You can see that we only display this section of the component if the user actually wants us to display more information. If they didn't give us any configuration then we supress the entire section via aura:if.
@@ -653,7 +651,6 @@ Now we modify the _handleRecordUpdated_ method to build the array of objects tha
 
 Add this to the controller underneath `component.set('v.namevalue',simpleRecord[nameField]);`
 ```javascript
-
             // get the list of additional fields from the 
             // Configuration Attribute
             var additionalFields = component.get('v.additionalfields');
@@ -688,10 +685,6 @@ Now you can refresh your Case page and you should see the Priority and Status fi
 <aura:component implements="flexipage:availableForRecordHome,force:hasRecordId,force:hasSObjectName" access="global">
     <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
     
-    <aura:attribute name="record" type="Object"/>
-    <aura:attribute name="simpleRecord" type="Object"/>
-    <aura:attribute name="recordError" type="String"/>
-    
     <!-- config attributes -->
     <aura:attribute name="namefield" type="String" default="Name"/>
     <aura:attribute name="additionalfields" type="String"/>
@@ -699,6 +692,10 @@ Now you can refresh your Case page and you should see the Priority and Status fi
     <!-- config attribute output helpers -->
     <aura:attribute name="namevalue" type="String"/>
     <aura:attribute name="additionalfielddata" type="Object[]"/>
+
+    <aura:attribute name="record" type="Object"/>
+    <aura:attribute name="simpleRecord" type="Object"/>
+    <aura:attribute name="recordError" type="String"/>
     
     <!-- record that we're sitting on -->
     <aura:attribute name="recordfields" type="String[]" default="CreatedBy.Name,CreatedDate,OwnerId"/>
@@ -860,7 +857,7 @@ Now you can refresh your Case page and you should see the Priority and Status fi
             // if this is the first time we're loading the record then 
             // populate the ownerid and load the record
             if(ownerId == null){
-				
+        
                 // assign the base record's ownerid onto the attribute we've
                 // attached to the second force:recordData's recordid value.
                 component.set('v.recordOwnerId', simpleRecord.OwnerId);
@@ -888,11 +885,11 @@ Now you can refresh your Case page and you should see the Priority and Status fi
 Finally, add some Apex to do things we can’t do without it, though we tried. So far we have accomplished a lot with zero Apex. It is a testament to the strength of the component framework that we can go this far and with this much flexibility.
 
 ### Get the “name” field for the object so we don’t have to define it
-One of the annoying things to this point is that we have to ask the user which field to get the name from. We also don't have the correct field label for whatever the name field is. What if the user is viewing your record in a different language? Your labels should respect their chosen language.
+One of the annoying things in our component is that we have to ask the user which field to get the name from. We also don't have the correct field label for whatever the name field is. What if the user is viewing your record in a different language? Your labels should respect their chosen language.
 
 Salesforce has all this information in the metadata, it just isn't something that our Lightning Component has access to. Because we're doing so much dynamically Salesforce doesn't get enough hints to know what metadata to surface and bring up to the client. I haven't figured out a way be this dynamic and still convince the framework to do all the heavy lifting here. (maybe dynamic component creation? You tell me.)
 
-Our answer? Make our own server calls to get the metadata needed. We've got to make lots of changes. This will include changes to the Component to change its data source for the name field label, change the componenet controller to call apex when it starts and process the results when Lightning Data Service returns, moving some of our logic to the helper file out of the controller, and adding an Apex Controller.
+Our answer? Make our own server calls to get the metadata needed. We've got to make lots of changes. This will include changes to the Component to change its data source for the name field label, change the componenet controller to call apex when it starts and process the results when Lightning Data Service returns, moving some of our logic to the helper file out of the controller file, and adding an Apex Controller.
 
 To make this work we have to add and Apex controller with an @AuraEnabled method. From there will will teach our component controller to call the apex controller.
 
@@ -902,7 +899,7 @@ Apex Controller
 ```java
 public with sharing class RecordInfoController {
 
-	// AuraEnabled makes this accessible to the Lighting Component
+  // AuraEnabled makes this accessible to the Lighting Component
     @AuraEnabled
     // Lightning methods must be static to be accessible
     // We're returning a Map<String, Object> so we don't have to build a specific
@@ -910,7 +907,7 @@ public with sharing class RecordInfoController {
     // more creative in how we structure the data we're passing to it
     // by passing in the object name we're helping increase the cache hit rate down the road
     public static Map<String, Object> getRecordInfo(String sObjectName){
-    	// Initialize the object to send it back later
+      // Initialize the object to send it back later
         Map<String, Object> recordInfo = new Map<String, Object>();
         // pass the object name into the Schema methods to get the object details
         List<Schema.DescribeSobjectResult> results = Schema.describeSObjects(new List<String>{sObjectName});
@@ -949,18 +946,18 @@ Add the attribute to hold the retun data from the Apex call
 
 Change the Name output to use the label from Apex
 ```html
-<!-- Record Name -->
+            <!-- Record Name -->
             <label>{!v.recordinfo.name.label}:</label>&nbsp;<ui:outputText value="{!v.namevalue}"/><br />
 ```
 
 We're going to make dynamic changes to the component controller, we're going to rebuild the doInit function to just manage the apex callout, all the stuff we have in there right now will be moved out to the component helper.
 
-To create the helper file we'll just click Helper in the Developer Console and Salesforce will get the file built and displayed. We'll move a bunch of the stuff that used to be in the controller out into the helper.
+To create the helper file we'll just click HELPER in the Developer Console and Salesforce will get the file created and displayed. We'll move a bunch of the stuff that used to be in the controller out into the helper.
 
 Helper file
 ```javascript
 ({
-	buildcomponentdata : function(component, response) {
+  buildcomponentdata : function(component, response) {
         
         // Alert the user with the value returned 
         // from the server
@@ -970,10 +967,10 @@ Helper file
         // add the API name of the name field from Apex to the component
         component.set('v.namefield', recordinfo.name.apiname);
         
-		// merge fields into the query field set
+    // merge fields into the query field set
         // get the default list of fields from the component
         var recordFields = component.get('v.recordfields');
-		// add the Apex name field to the list of fields for Lightning Data Service
+    // add the Apex name field to the list of fields for Lightning Data Service
         recordFields.push(recordinfo.name.apiname);
         
         // Get the list of other fields the user wants to display
@@ -998,7 +995,7 @@ Helper file
         component.set('v.loaderId', recordId);
         // force the component to reload
         component.find('recordLoader').reloadRecord(true);
-	}
+  }
 })
 ```
 
@@ -1009,7 +1006,7 @@ Change the entire doInit method in the controller to call the apex method, when 
         //////////////////////////////////////
         var action = component.get("c.getRecordInfo");
         action.setParams({ sObjectName : component.get("v.sObjectName") });
-		action.setStorable();
+    action.setStorable();
         // Create a callback that is executed after 
         // the server-side action returns
         action.setCallback(this, function(response) {
@@ -1036,7 +1033,7 @@ Change the entire doInit method in the controller to call the apex method, when 
     },
 ```
 
-With all of this in place you should be able to refresh the Account or Case page and see _Name_ replaced with Account Name or Case Number automatically. You could even go and change your language and see the label for the field change.
+With all of this in place you should be able to refresh the Account or Case page and see _Name_ text replaced with Account Name or Case Number automatically. You could even go and change your language and see the label for the field change.
 
   <details><summary>Full Component</summary>
 <p>
@@ -1045,10 +1042,6 @@ With all of this in place you should be able to refresh the Account or Case page
 <aura:component implements="flexipage:availableForRecordHome,force:hasRecordId,force:hasSObjectName" access="global"
                 controller="RecordInfoController">
     <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
-    
-    <aura:attribute name="record" type="Object"/>
-    <aura:attribute name="simpleRecord" type="Object"/>
-    <aura:attribute name="recordError" type="String"/>
     
     <!-- config attributes -->
     <aura:attribute name="namefield" type="String" default="Name"/>
@@ -1060,6 +1053,10 @@ With all of this in place you should be able to refresh the Account or Case page
     
     <!-- data we got back from apex -->
     <aura:attribute name="recordinfo" type="Object"/>
+
+    <aura:attribute name="record" type="Object"/>
+    <aura:attribute name="simpleRecord" type="Object"/>
+    <aura:attribute name="recordError" type="String"/>
     
     <!-- record that we're sitting on -->
     <aura:attribute name="recordfields" type="String[]" default="CreatedBy.Name,CreatedDate,OwnerId"/>
@@ -1105,7 +1102,7 @@ With all of this in place you should be able to refresh the Account or Case page
             <ui:outputText value="{!v.simpleRecordOwner.Name}"/><br />
             
             
-			<!-- Record Name -->
+      <!-- Record Name -->
             <label>{!v.recordinfo.name.label}:</label>&nbsp;<ui:outputText value="{!v.namevalue}"/><br />
             <!-- CreatedDate, CreatedBy -->
             <label>Created By:</label>&nbsp;<ui:outputText value="{!v.simpleRecord.CreatedBy.Name}"/>&nbsp;on
@@ -1154,7 +1151,7 @@ With all of this in place you should be able to refresh the Account or Case page
         //////////////////////////////////////
         var action = component.get("c.getRecordInfo");
         action.setParams({ sObjectName : component.get("v.sObjectName") });
-		action.setStorable();
+    action.setStorable();
         // Create a callback that is executed after 
         // the server-side action returns
         action.setCallback(this, function(response) {
@@ -1219,7 +1216,7 @@ With all of this in place you should be able to refresh the Account or Case page
             // if this is the first time we're loading the record then 
             // populate the ownerid and load the record
             if(ownerId == null){
-				
+        
                 // assign the base record's ownerid onto the attribute we've
                 // attached to the second force:recordData's recordid value.
                 component.set('v.recordOwnerId', simpleRecord.OwnerId);
@@ -1250,7 +1247,7 @@ Full Helper and Apex Controller can be found above.
 
 So we finally figured out how to give this component some real intelligence, go and figure out the name and the correct way to present it without asking the user for qualifying information.
 
-Our final step builds on the Additional Fields concept. Instead of passing API names to the component we're going to build Custom Metadata to configure which fields to display for each SObject type. This will give us some of the same magic that we got out of the Name field, we can get the field labels instead of the API names, we can also centralize configuration which is a two-edged sword.
+Our final step builds on the Additional Fields concept. In additional to being able to pass API names to the component we're going to build Custom Metadata to configure which fields to display for each SObject type. This will give us some of the same magic that we got out of the Name field, we can get the field labels instead of the API names, we can also centralize configuration which is a two-edged sword.
 
 ### Create a Custom Metadata Object
 
@@ -1266,14 +1263,14 @@ Once the object is created we want to add a few fields to it
 
 Fields
 * Object
-	* Type = `Metadata Relationship`
-	* Related To = `Entity Definition`
-	* Label = `Object`
+  * Type = `Metadata Relationship`
+  * Related To = `Entity Definition`
+  * Label = `Object`
 * Field
-	* Type = `Metadata Relationship`
-	* Related To = `Field Definition`
-	* Label = 'Field'
-	* Controlling Field = `Object`
+  * Type = `Metadata Relationship`
+  * Related To = `Field Definition`
+  * Label = 'Field'
+  * Controlling Field = `Object`
 
 
 Now that our configuration object is built, lets add some data. Select Manage Record Info Fields on the main page for the Record Info Field metadata page. Click New and create a few records for objects we're already working with; Account and Case.
@@ -1282,7 +1279,7 @@ I created records for `Account -> Employees` because I know that the API name an
 
 ### Add Apex methods to the Lighting Component to customize the component per-object type with additional output fields
 
-We've setup the system to allow us to manage this, now we again have to teach our component to handle this output.
+We've setup the org to store the configuration, now we again have to teach our component about the newly available configuration data.
 
 We don't have to make any changes to the actual component as we're going to inject this into the current Additional Fields data output.
 
@@ -1299,10 +1296,10 @@ Apex Controller Changes, add this under the recordInfo variable definition
 ```
 This will pull the metadata from the database and add it to the data structure we're returning up to the component.
 
-Inside the helper's buildcomponentdata method lets enable processing of the new metadata
+Inside the helper file's buildcomponentdata method lets enable processing of the new metadata
 Under `recordFields.push(recordinfo.name.apiname);` add
 ```javascript
-	// add the field API names from the custom metadata
+    // add the field API names from the custom metadata
     for(var i = 0; i < recordinfo.mdtfields.length; i++){
         recordFields.push(recordinfo.mdtfields[i].apiname);
     }
@@ -1315,11 +1312,11 @@ Under `var additionalfielddata = [];` add
   // loop through the custom metadata and add to Additional Fields section
   var recordinfo = component.get('v.recordinfo');
   if(recordinfo.mdtfields != undefined){
-  	for(var i = 0; i < recordinfo.mdtfields.length; i++){
-  		var field = recordinfo.mdtfields[i].label;
-  		var value = simpleRecord[recordinfo.mdtfields[i].apiname];
-  		additionalfielddata.push({name:field,value:value});
-  	}
+    for(var i = 0; i < recordinfo.mdtfields.length; i++){
+      var field = recordinfo.mdtfields[i].label;
+      var value = simpleRecord[recordinfo.mdtfields[i].apiname];
+      additionalfielddata.push({name:field,value:value});
+    }
   }
 ```
 
@@ -1337,10 +1334,6 @@ Now you should be able to refresh your record and see the new fields displayed i
                 controller="RecordInfoController">
     <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
     
-    <aura:attribute name="record" type="Object"/>
-    <aura:attribute name="simpleRecord" type="Object"/>
-    <aura:attribute name="recordError" type="String"/>
-    
     <!-- config attributes -->
     <aura:attribute name="namefield" type="String" default="Name"/>
     <aura:attribute name="additionalfields" type="String"/>
@@ -1351,6 +1344,10 @@ Now you should be able to refresh your record and see the new fields displayed i
     
     <!-- data we got back from apex -->
     <aura:attribute name="recordinfo" type="Object"/>
+    
+    <aura:attribute name="record" type="Object"/>
+    <aura:attribute name="simpleRecord" type="Object"/>
+    <aura:attribute name="recordError" type="String"/>
     
     <!-- record that we're sitting on -->
     <aura:attribute name="recordfields" type="String[]" default="CreatedBy.Name,CreatedDate,OwnerId"/>
@@ -1396,7 +1393,7 @@ Now you should be able to refresh your record and see the new fields displayed i
             <ui:outputText value="{!v.simpleRecordOwner.Name}"/><br />
             
             
-			<!-- Record Name -->
+      <!-- Record Name -->
             <label>{!v.recordinfo.name.label}:</label>&nbsp;<ui:outputText value="{!v.namevalue}"/><br />
             <!-- CreatedDate, CreatedBy -->
             <label>Created By:</label>&nbsp;<ui:outputText value="{!v.simpleRecord.CreatedBy.Name}"/>&nbsp;on
@@ -1445,7 +1442,7 @@ Now you should be able to refresh your record and see the new fields displayed i
         //////////////////////////////////////
         var action = component.get("c.getRecordInfo");
         action.setParams({ sObjectName : component.get("v.sObjectName") });
-		action.setStorable();
+    action.setStorable();
         // Create a callback that is executed after 
         // the server-side action returns
         action.setCallback(this, function(response) {
@@ -1520,7 +1517,7 @@ Now you should be able to refresh your record and see the new fields displayed i
             // if this is the first time we're loading the record then 
             // populate the ownerid and load the record
             if(ownerId == null){
-				
+        
                 // assign the base record's ownerid onto the attribute we've
                 // attached to the second force:recordData's recordid value.
                 component.set('v.recordOwnerId', simpleRecord.OwnerId);
@@ -1547,7 +1544,7 @@ Now you should be able to refresh your record and see the new fields displayed i
 
 ```javascript
 ({
-	buildcomponentdata : function(component, response) {
+  buildcomponentdata : function(component, response) {
         
         // Alert the user with the value returned 
         // from the server
@@ -1557,10 +1554,10 @@ Now you should be able to refresh your record and see the new fields displayed i
         // add the API name of the name field from Apex to the component
         component.set('v.namefield', recordinfo.name.apiname);
         
-		// merge fields into the query field set
+    // merge fields into the query field set
         // get the default list of fields from the component
         var recordFields = component.get('v.recordfields');
-		// add the Apex name field to the list of fields for Lightning Data Service
+    // add the Apex name field to the list of fields for Lightning Data Service
         recordFields.push(recordinfo.name.apiname);
         // add the field API names from the custom metadata
         for(var i = 0; i < recordinfo.mdtfields.length; i++){
@@ -1589,7 +1586,7 @@ Now you should be able to refresh your record and see the new fields displayed i
         component.set('v.loaderId', recordId);
         // force the component to reload
         component.find('recordLoader').reloadRecord(true);
-	}
+  }
 })
 ```
 
@@ -1627,7 +1624,7 @@ Now you should be able to refresh your record and see the new fields displayed i
 ```java
 public with sharing class RecordInfoController {
 
-	// AuraEnabled makes this accessible to the Lighting Component
+    // AuraEnabled makes this accessible to the Lighting Component
     // Lightning methods must be static to be accessible
     // We're returning a Map<String, Object> so we don't have to build a specific
     // class just to get data up to the parent, it does mean we have to be just a little
@@ -1635,7 +1632,7 @@ public with sharing class RecordInfoController {
     // by passing in the object name we're helping increase the cache hit rate down the road
     @AuraEnabled
     public static Map<String, Object> getRecordInfo(String sObjectName){
-    	// Initialize the object to send it back later
+      // Initialize the object to send it back later
         Map<String, Object> recordInfo = new Map<String, Object>();
         
         // build the mdtfields list and populate it based on what is in the database
@@ -1689,4 +1686,3 @@ If you were to debug through this you would see that `handleRecordUpdated` is ac
 What other data could be useful in this component? Would you add something like this to your org?
 
 Feel free to chat with me @AKHeber on Twitter or in the issues on this repo.
-
