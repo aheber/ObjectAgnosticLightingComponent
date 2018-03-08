@@ -1671,18 +1671,36 @@ public with sharing class RecordInfoController {
 </p>
 </details>
 
-## Wrap up
+## Wrap up and Additional Study
 
 Where can you see that we've cut corners?
 
 Do you see any significant design changes that you would make?
 
-How can you make the entire thing translated?
+How can you make the entire thing translatable?
 
-What if the record doesn't have an owner, or has multiple owners?
+How could you only use the Configuration Attribute but still get field labels?
 
-If you were to debug through this you would see that `handleRecordUpdated` is actually called twice, once using the default fields and again after we add our fields to it. how could you limit that?
+What if the record doesn't have an owner but is owned by its parent, or has multiple owners?
+
+If you were to debug through this you would see that `handleRecordUpdated` is actually called twice, once using the default fields and again after we add our fields to it. How could you limit that?
 
 What other data could be useful in this component? Would you add something like this to your org?
 
-Feel free to chat with me @AKHeber on Twitter or in the issues on this repo.
+We didn't spend much time on cache strategies because Lightning Design System did most of the work. Are we using a cache on our Apex call? Could you make improvements there that would make a significant performance difference?
+
+What would be the advantages of using Field Sets over the Custom Metadata?
+
+What else could you add to the Custom Metadata that would make it more valuable?
+
+Would you add more configuration attributes? Maybe options to enable/disable the fixed field output like Created/Owner/Name??
+
+Would you ever have a scenario where you would add this component to the layout more than once? Would there be advanatages? If there were possible advantages what changes would you have to make to realize them?
+
+(if you think we should add some other thoughts here please submit via an Issue or Pull Request) 
+
+Feel free to chat with me:
+* Issues on this repo
+* @AKHeber on Twitter
+* [Trailblazer Community](https://success.salesforce.com/ProfileView?u=0053000000BKvJMAA1)
+
